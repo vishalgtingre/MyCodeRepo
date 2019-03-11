@@ -1,0 +1,721 @@
+---
+swagger: "2.0"
+info:
+  description: "The Account Information API is used to retrieve account data. You\
+    \ can retrieve transaction information, the current balance of an account or details\
+    \ of the account itself.\nThe API can be used by licensed third party service\
+    \ providers to access ABN AMRO accounts. An account can only be accessed when\
+    \ ABN AMRO's account holder authorizes this through the consent application.\n\
+    Please note that the sandbox environment will be available in Februari"
+  version: "3.0.4"
+  title: "Account Information"
+host: "api-sandbox.abnamro.com"
+basePath: "/v1/accounts/"
+schemes:
+- "https"
+paths:
+  /{accountNumber}/transactions:
+    get:
+      description: "Retrieve a list of transactions for a specific account number."
+      operationId: "account_number_transactions_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "accountNumber"
+        in: "path"
+        description: "The IBAN for which transactions are to be retrieved"
+        required: true
+        type: "string"
+      - name: "Authorization"
+        in: "header"
+        description: "Access token to be passed as a Bearer token."
+        required: true
+        type: "string"
+      - name: "API_Key"
+        in: "header"
+        description: "Consumer key obtained after app registration on developer portal"
+        required: true
+        type: "string"
+      - name: "bookDateFrom"
+        in: "query"
+        description: "Filter, only retrieve transactions more recent than this date\
+          \ (Format: yyyy-mm-dd). If field or date is ommitted, last 50 transactions\
+          \ are retrieved"
+        required: false
+        type: "string"
+        format: "date"
+      - name: "bookDateTo"
+        in: "query"
+        description: "Filter, only retrieve transactions preceding this date (Format:\
+          \ yyyy-mm-dd)."
+        required: false
+        type: "string"
+        format: "date"
+      - name: "nextPageKey"
+        in: "query"
+        description: "Key parameter for fetching the next set of transactions. Value\
+          \ to be used is returned in a response of a previous request to the endpoint\
+          \ when more transactions are present"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          headers:
+            TraceId:
+              type: "string"
+              description: "Unique id generated for every request"
+          schema:
+            $ref: "#/definitions/transactionResponse"
+        400:
+          description: "Bad request/parameter error"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_1100_004"
+                message: "One of the input paramater is invalid"
+                reference: "https://developer.abnamro.com/get-started#authentication"
+                traceId: "5d47e7b5-55b8-4b9f-b438-51ed01f92f3a"
+                status: 400
+                category: "BAD_REQUEST"
+          schema:
+            $ref: "#/definitions/Message"
+        401:
+          description: "Unauthorised"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_2002_002"
+                message: "The presented access token is not valid or expired"
+                reference: "https://developer.abnamro.com/get-started#authentication"
+                traceId: "36fa4309-fd51-4e6c-b8bc-9e1843b47cf8"
+                status: 401
+                category: "INVALID_ACCESS_TOKEN"
+          schema:
+            $ref: "#/definitions/Message"
+        403:
+          description: "Access Forbidden"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_3002_003"
+                message: "Insufficient scope of the token"
+                reference: "https://developer.abnamro.com/api/corporate-accounts/technical-details"
+                traceId: "c8e372a2-5968-446c-8562-d432cf5722b1"
+                status: 403
+                category: "INSUFFICIENT_SCOPE"
+          schema:
+            $ref: "#/definitions/Message"
+        404:
+          description: "Not found (account number not found)"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_4001_001"
+                message: "The requested resource was not found, or a disallowed method\
+                  \ was used"
+                reference: "https://developer.abnamro.com/overview"
+                traceId: "aa79f41e-ba03-4089-abf0-6113fddc924f"
+                status: 404
+                category: "NOT_FOUND"
+          schema:
+            $ref: "#/definitions/Message"
+        500:
+          description: "Internal Server Error"
+          examples:
+            applications/json:
+              errors:
+              - code: "MESSAGE_BAI560_0005"
+                message: "A technical error has occurred. Please try again later.\
+                  \ Please report the following code when contacting us: MESSAGE_BAI560_0005"
+                reference: "https://developer.abnamro.com/api/corporate-accounts/technical-details"
+                traceId: "114b1652-e499-45b4-8328-0dc41fb266f5"
+                status: 500
+                category: "BACKEND_ERROR"
+          schema:
+            $ref: "#/definitions/Message"
+      security:
+      - PSD2_Oauth:
+        - "psd2:account:transaction:read"
+      x-swagger-router-controller: "swagger_server.controllers.default_controller"
+  /{accountNumber}/balances:
+    get:
+      description: "This operation allows you to retrieve the details of the account,\
+        \ like book balance of the account and currency."
+      operationId: "account_number_balances_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "accountNumber"
+        in: "path"
+        description: "The IBAN for which the balance is to be retrieved"
+        required: true
+        type: "string"
+      - name: "Authorization"
+        in: "header"
+        description: "Access token to be passed as a Bearer token."
+        required: true
+        type: "string"
+      - name: "API_Key"
+        in: "header"
+        description: "Consumer key obtained after app registration on developer portal"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          headers:
+            TraceId:
+              type: "string"
+              description: "Unique id generated for every request"
+          schema:
+            $ref: "#/definitions/balanceResponse"
+        400:
+          description: "Bad request/parameter error"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_1100_004"
+                message: "One of the input paramater is invalid"
+                reference: "https://developer.abnamro.com/get-started#authentication"
+                traceId: "5d47e7b5-55b8-4b9f-b438-51ed01f92f3a"
+                status: 400
+                category: "BAD_REQUEST"
+          schema:
+            $ref: "#/definitions/Message"
+        401:
+          description: "Unauthorised"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_2002_002"
+                message: "The presented access token is not valid or expired"
+                reference: "https://developer.abnamro.com/get-started#authentication"
+                traceId: "36fa4309-fd51-4e6c-b8bc-9e1843b47cf8"
+                status: 401
+                category: "INVALID_ACCESS_TOKEN"
+            $ref: "#/definitions/Message"
+        403:
+          description: "Access Forbidden"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_3002_003"
+                message: "Insufficient scope of the token"
+                reference: "https://developer.abnamro.com/api/corporate-accounts/technical-details"
+                traceId: "c8e372a2-5968-446c-8562-d432cf5722b1"
+                status: 403
+                category: "INSUFFICIENT_SCOPE"
+          schema:
+            $ref: "#/definitions/Message"
+        404:
+          description: "Not found (account number not found or no balance)"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_4001_001"
+                message: "The requested resource was not found, or a disallowed method\
+                  \ was used"
+                reference: "https://developer.abnamro.com/overview"
+                traceId: "aa79f41e-ba03-4089-abf0-6113fddc924f"
+                status: 404
+                category: "NOT_FOUND"
+          schema:
+            $ref: "#/definitions/Message"
+        500:
+          description: "Internal Server Error"
+          examples:
+            applications/json:
+              errors:
+              - code: "MESSAGE_BAI560_0005"
+                message: "A technical error has occurred. Please try again later.\
+                  \ Please report the following code when contacting us: MESSAGE_BAI560_0005"
+                reference: "https://developer.abnamro.com/api/corporate-accounts/technical-details"
+                traceId: "114b1652-e499-45b4-8328-0dc41fb266f5"
+                status: 500
+                category: "BACKEND_ERROR"
+          schema:
+            $ref: "#/definitions/Message"
+      security:
+      - PSD2_Oauth:
+        - "psd2:account:balance:read"
+      x-swagger-router-controller: "swagger_server.controllers.default_controller"
+  /{accountNumber}/details:
+    get:
+      description: "This operation allows you to retrieve the details of the account,\
+        \ like currency and account holder name."
+      operationId: "account_number_details_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "accountNumber"
+        in: "path"
+        description: "The IBAN for which the details are to be retrieved"
+        required: true
+        type: "string"
+      - name: "Authorization"
+        in: "header"
+        description: "Access token to be passed as a Bearer token."
+        required: true
+        type: "string"
+      - name: "API_Key"
+        in: "header"
+        description: "Consumer key obtained after app registration on developer portal"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          headers:
+            TraceId:
+              type: "string"
+              description: "Unique id generated for every request"
+          schema:
+            $ref: "#/definitions/detailsResponse"
+        400:
+          description: "Bad request/parameter error"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_1100_004"
+                message: "One of the input paramater is invalid"
+                reference: "https://developer.abnamro.com/get-started#authentication"
+                traceId: "5d47e7b5-55b8-4b9f-b438-51ed01f92f3a"
+                status: 400
+                category: "BAD_REQUEST"
+          schema:
+            $ref: "#/definitions/Message"
+        401:
+          description: "Unauthorised"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_2002_002"
+                message: "The presented access token is not valid or expired"
+                reference: "https://developer.abnamro.com/get-started#authentication"
+                traceId: "36fa4309-fd51-4e6c-b8bc-9e1843b47cf8"
+                status: 401
+                category: "INVALID_ACCESS_TOKEN"
+            schema:
+              $ref: "#/definitions/Message"
+        403:
+          description: "Access Forbidden"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_3002_003"
+                message: "Insufficient scope of the token"
+                reference: "https://developer.abnamro.com/api/corporate-accounts/technical-details"
+                traceId: "c8e372a2-5968-446c-8562-d432cf5722b1"
+                status: 403
+                category: "INSUFFICIENT_SCOPE"
+          schema:
+            $ref: "#/definitions/Message"
+        404:
+          description: "Not found (account number not found or no balance)"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_4001_001"
+                message: "The requested resource was not found, or a disallowed method\
+                  \ was used"
+                reference: "https://developer.abnamro.com/overview"
+                traceId: "aa79f41e-ba03-4089-abf0-6113fddc924f"
+                status: 404
+                category: "NOT_FOUND"
+          schema:
+            $ref: "#/definitions/Message"
+        500:
+          description: "Internal Server Error"
+          examples:
+            applications/json:
+              errors:
+              - code: "MESSAGE_BAI560_0005"
+                message: "A technical error has occurred. Please try again later.\
+                  \ Please report the following code when contacting us: MESSAGE_BAI560_0005"
+                reference: "https://developer.abnamro.com/api/corporate-accounts/technical-details"
+                traceId: "114b1652-e499-45b4-8328-0dc41fb266f5"
+                status: 500
+                category: "BACKEND_ERROR"
+          schema:
+            $ref: "#/definitions/Message"
+      security:
+      - PSD2_Oauth:
+        - "psd2:account:details:read"
+      x-swagger-router-controller: "swagger_server.controllers.default_controller"
+  /{accountNumber}/funds:
+    get:
+      description: "This operation will allow you to verify if the amount specified\
+        \ in the request is available on the account at that time (including any creditline)."
+      operationId: "account_number_funds_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "accountNumber"
+        in: "path"
+        description: "The IBAN for which transactions are to be retrieved"
+        required: true
+        type: "string"
+      - name: "Authorization"
+        in: "header"
+        description: "Access token to be passed as a Bearer token."
+        required: true
+        type: "string"
+      - name: "API_Key"
+        in: "header"
+        description: "Consumer key obtained after app registration on developer portal"
+        required: true
+        type: "string"
+      - name: "amount"
+        in: "query"
+        description: "Amount, decimal always a positive number and no more than 3\
+          \ decimals (fractional digits)"
+        required: true
+        type: "integer"
+        format: "double"
+      - name: "currency"
+        in: "query"
+        description: "Currency of the amount, 3 characters alphabetic ISO-4217 currency\
+          \ code (e.g. EUR or USD)"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          headers:
+            TraceId:
+              type: "string"
+              description: "Unique id generated for every request"
+          schema:
+            $ref: "#/definitions/fundsResponse"
+        400:
+          description: "Bad request/parameter error"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_1100_004"
+                message: "One of the input paramater is invalid"
+                reference: "https://developer.abnamro.com/get-started#authentication"
+                traceId: "5d47e7b5-55b8-4b9f-b438-51ed01f92f3a"
+                status: 400
+                category: "BAD_REQUEST"
+          schema:
+            $ref: "#/definitions/Message"
+        401:
+          description: "Unauthorised"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_2002_002"
+                message: "The presented access token is not valid or expired"
+                reference: "https://developer.abnamro.com/get-started#authentication"
+                traceId: "36fa4309-fd51-4e6c-b8bc-9e1843b47cf8"
+                status: 401
+                category: "INVALID_ACCESS_TOKEN"
+          schema:
+            $ref: "#/definitions/Message"
+        403:
+          description: "Access Forbidden"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_3002_003"
+                message: "Insufficient scope of the token"
+                reference: "https://developer.abnamro.com/api/corporate-accounts/technical-details"
+                traceId: "c8e372a2-5968-446c-8562-d432cf5722b1"
+                status: 403
+                category: "INSUFFICIENT_SCOPE"
+          schema:
+            $ref: "#/definitions/Message"
+        404:
+          description: "Not found (account number not found)"
+          examples:
+            applications/json:
+              errors:
+              - code: "ERR_4001_001"
+                message: "The requested resource was not found, or a disallowed method\
+                  \ was used"
+                reference: "https://developer.abnamro.com/overview"
+                traceId: "aa79f41e-ba03-4089-abf0-6113fddc924f"
+                status: 404
+                category: "NOT_FOUND"
+          schema:
+            $ref: "#/definitions/Message"
+        500:
+          description: "Internal Server Error"
+          examples:
+            applications/json:
+              errors:
+              - code: "MESSAGE_BAI560_0005"
+                message: "A technical error has occurred. Please try again later.\
+                  \ Please report the following code when contacting us: MESSAGE_BAI560_0005"
+                reference: "https://developer.abnamro.com/api/corporate-accounts/technical-details"
+                traceId: "114b1652-e499-45b4-8328-0dc41fb266f5"
+                status: 500
+                category: "BACKEND_ERROR"
+          schema:
+            $ref: "#/definitions/Message"
+      security:
+      - PSD2_Oauth:
+        - "psd2:account:funds:read"
+      x-swagger-router-controller: "swagger_server.controllers.default_controller"
+securityDefinitions:
+  PSD2_Oauth:
+    type: "oauth2"
+    tokenUrl: "https://auth-sandbox.connect.abnamro.com/as/token.oauth2"
+    flow: "application"
+    scopes:
+      psd2:account:balance:read: "Read the balance of an account"
+      psd2:account:transaction:read: "Read the transactions/mutations on an account"
+      psd2:account:details:read: "Read the details of an account e.g. Address, Currency\
+        \ etc"
+      psd2:account:funds:read: "Check availability of funds on an account"
+definitions:
+  transactionResponse:
+    type: "object"
+    required:
+    - "accountNumber"
+    properties:
+      accountNumber:
+        type: "string"
+        example: "NL12ABNA9999876523"
+        description: "The IBAN for which transactions were retrieved"
+      nextPageKey:
+        type: "string"
+        example: "2018-10-24T11:50:27.810000"
+        description: "Key parameter for fetching the next set of transactions. Value\
+          \ to be used is returned in a response of a previous request to the endpoint\
+          \ when more transactions are present."
+      transactions:
+        type: "array"
+        items:
+          $ref: "#/definitions/transactionResponse_transactions"
+    example:
+      nextPageKey: "2018-10-24T11:50:27.810000"
+      accountNumber: "NL12ABNA9999876523"
+      transactions:
+      - bookDate: "2018-10-24"
+        amount: 10.1500000000000003552713678800500929355621337890625
+        descriptionLines:
+        - "SEPA Overboeking"
+        - "SEPA Overboeking"
+        counterPartyAccountNumber: "NL55INGB9999300517"
+        currency: "EUR"
+        mutationCode: "654"
+        counterPartyName: "Petstore supplies"
+        transactionId: "8297K5935164172S0AC"
+        transactionTimestamp: "2018-10-24-11:59:35.710"
+        balanceAfterMutation: 6941.1800000000002910383045673370361328125
+        status: "EXECUTED"
+      - bookDate: "2018-10-24"
+        amount: 10.1500000000000003552713678800500929355621337890625
+        descriptionLines:
+        - "SEPA Overboeking"
+        - "SEPA Overboeking"
+        counterPartyAccountNumber: "NL55INGB9999300517"
+        currency: "EUR"
+        mutationCode: "654"
+        counterPartyName: "Petstore supplies"
+        transactionId: "8297K5935164172S0AC"
+        transactionTimestamp: "2018-10-24-11:59:35.710"
+        balanceAfterMutation: 6941.1800000000002910383045673370361328125
+        status: "EXECUTED"
+  balanceResponse:
+    type: "object"
+    required:
+    - "accountNumber"
+    properties:
+      accountNumber:
+        type: "string"
+        example: "NL12ABNA9999876523"
+        description: "The IBAN for which the balance was retrieved"
+      balanceType:
+        type: "string"
+        example: "BOOKBALANCE"
+        description: "Indicator of the type of balance that was retrieved"
+        enum:
+        - "BOOKBALANCE"
+      amount:
+        type: "number"
+        format: "double"
+        example: -999.990000000000009094947017729282379150390625
+        description: "Amount including minus -9999999.99, unformatted. Negative in\
+          \ case of debit balance"
+      currency:
+        type: "string"
+        example: "EUR"
+        description: "Currency of the mutation, 3 characters alphabetic ISO currency\
+          \ code (e.g. EUR or USD) as per ISO 4217"
+    example:
+      amount: -999.990000000000009094947017729282379150390625
+      balanceType: "BOOKBALANCE"
+      currency: "EUR"
+      accountNumber: "NL12ABNA9999876523"
+  detailsResponse:
+    type: "object"
+    required:
+    - "accountNumber"
+    properties:
+      accountNumber:
+        type: "string"
+        example: "NL12ABNA9999876523"
+        description: "The IBAN for which the details were retrieved"
+      currency:
+        type: "string"
+        example: "EUR"
+        description: "Currency of the account, 3 characters alphabetic ISO currency\
+          \ code (e.g. EUR or USD) as per ISO 4217"
+      AccountHolderName:
+        type: "string"
+        example: "Firstname Lastname"
+        description: "Name of the owner of the account"
+    example:
+      AccountHolderName: "Firstname Lastname"
+      currency: "EUR"
+      accountNumber: "NL12ABNA9999876523"
+  fundsResponse:
+    type: "object"
+    required:
+    - "accountNumber"
+    properties:
+      accountNumber:
+        type: "string"
+        example: "NL12ABNA9999876523"
+        description: "The IBAN for which funds were checked"
+      amount:
+        type: "integer"
+        format: "double"
+        example: "10.15"
+        description: "The amount of the funds checked"
+      currency:
+        type: "string"
+        example: "USD"
+        description: "The currency of the funds checked"
+      available:
+        type: "boolean"
+        example: true
+        description: "The response if the amount was available true/false"
+    example:
+      amount: "10.15"
+      available: true
+      currency: "USD"
+      accountNumber: "NL12ABNA9999876523"
+  Message:
+    type: "object"
+    properties:
+      errors:
+        type: "array"
+        items:
+          $ref: "#/definitions/Message_errors"
+    title: "message"
+    description: "Response object in case of error"
+  transactionResponse_transactions:
+    required:
+    - "amount"
+    - "bookDate"
+    - "currency"
+    - "transactionId"
+    properties:
+      transactionId:
+        type: "string"
+        example: "8297K5935164172S0AC"
+        description: "Unique id generated for every request"
+      mutationCode:
+        type: "string"
+        example: "654"
+        description: "Indicator for the type of transaction"
+      descriptionLines:
+        type: "array"
+        description: "Unformatted text entered by the user during the transaction.\
+          \ String array of up to nine lines of each 0 to 32 characters"
+        items:
+          type: "string"
+          example: "SEPA Overboeking"
+      transactionTimestamp:
+        type: "string"
+        example: "2018-10-24-11:59:35.710"
+        description: "Timestamp of the transaction execution"
+      bookDate:
+        type: "string"
+        format: "date"
+        example: "2018-10-24"
+        description: "The bookkeeping date of the mutation"
+      balanceAfterMutation:
+        type: "number"
+        format: "double"
+        example: 6941.1800000000002910383045673370361328125
+        description: "Account balance after the current payment transaction"
+      counterPartyAccountNumber:
+        type: "string"
+        example: "NL55INGB9999300517"
+        description: "Counter account number. Will be empty if no counter account\
+          \ is found for the transaction (e.g an ATM withdrawal)."
+      counterPartyName:
+        type: "string"
+        example: "Petstore supplies"
+        description: "Name associated with the counter account number"
+        maxLength: 24
+      amount:
+        type: "number"
+        format: "double"
+        example: 10.1500000000000003552713678800500929355621337890625
+        description: "Amount including minus -9999999.99, unformatted. Negative in\
+          \ case of debit transactions"
+      currency:
+        type: "string"
+        example: "EUR"
+        description: "Currency of the mutation, 3 characters alphabetic ISO currency\
+          \ code (e.g. EUR or USD) as per ISO 4217"
+      status:
+        type: "string"
+        example: "EXECUTED"
+        description: "The status of the transaction."
+        enum:
+        - "EXECUTED"
+    description: "Transaction details"
+    example:
+      bookDate: "2018-10-24"
+      amount: 10.1500000000000003552713678800500929355621337890625
+      descriptionLines:
+      - "SEPA Overboeking"
+      - "SEPA Overboeking"
+      counterPartyAccountNumber: "NL55INGB9999300517"
+      currency: "EUR"
+      mutationCode: "654"
+      counterPartyName: "Petstore supplies"
+      transactionId: "8297K5935164172S0AC"
+      transactionTimestamp: "2018-10-24-11:59:35.710"
+      balanceAfterMutation: 6941.1800000000002910383045673370361328125
+      status: "EXECUTED"
+  Message_errors:
+    required:
+    - "category"
+    - "code"
+    - "message"
+    - "reference"
+    - "status"
+    - "traceId"
+    properties:
+      code:
+        type: "string"
+        description: "The unique error code key"
+      message:
+        type: "string"
+        description: "Understandable description for the error code key"
+      reference:
+        type: "string"
+        description: "Reference where to find more information on error"
+      traceId:
+        type: "string"
+        description: "The unique trace id sent for this request"
+      status:
+        type: "integer"
+        format: "int32"
+        example: 123
+        description: "The http code of the error"
+      category:
+        type: "string"
+        description: "Category of error"
+externalDocs:
+  description: "Other information on the Account Information API."
+  url: "https://url.of.dev.portal/accountinformation/overview"
